@@ -1,14 +1,14 @@
 pub enum Token {
 	/// `>`
-	PointerToRight(usize),
+	PointerRight,
 	/// `<`
-	PointerToLeft(usize),
+	PointerLeft,
 	/// `+`
-	CellInc(usize),
+	CellInc,
 	/// `-`
-	CellDec(usize),
+	CellDec,
 	/// `,`
-	CellInsert(usize),
+	CellInsert,
 	/// `.`
 	CellPrint,
 	/// `[`

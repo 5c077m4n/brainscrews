@@ -2,7 +2,7 @@ use super::instr::Instr;
 
 pub struct VM {
 	pub ip: usize,
-	pub stack: Vec<Instr>,
+	pub stack: Vec<isize>,
 }
 
 impl Default for VM {
@@ -15,5 +15,17 @@ impl Default for VM {
 }
 
 impl VM {
-	pub fn handle_instr(&self, _cmd: &Instr) {}
+	pub fn handle_instr(&self, _instr: &Instr) {
+		todo!()
+	}
+
+	pub fn run(&mut self, program: &[Instr]) -> Option<isize> {
+		self.ip = 0;
+		while let Some(instr) = program.get(self.ip) {
+			self.ip += 1;
+			self.handle_instr(instr);
+		}
+
+		self.stack.pop()
+	}
 }
