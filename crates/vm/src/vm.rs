@@ -15,8 +15,8 @@ impl Default for VM {
 }
 
 impl VM {
-	pub fn handle_instr(&self, _instr: &Instr) {
-		todo!()
+	pub fn handle_instr(&self, instr: &Instr) {
+		todo!("Handle {:?} instruction", instr)
 	}
 
 	pub fn run(&mut self, program: &[Instr]) -> Option<isize> {
