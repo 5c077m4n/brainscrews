@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.57"
 env_logger = "0.9.0"
-lexer = { path = "../lexer/" }
 log = "0.4.17"
+lexer = { path = "../lexer/" }
+macros = { path = "../macros/" }

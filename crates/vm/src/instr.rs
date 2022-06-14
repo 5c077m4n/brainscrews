@@ -4,13 +4,14 @@ use lexer::tokens::Token;
 pub enum Instr {
 	MoveRight(usize),
 	MoveLeft(usize),
-	Inc(usize),
-	Dec(usize),
+	Inc(isize),
+	Dec(isize),
 	Insert,
 	Print,
 	LoopStart,
 	LoopEnd,
-	Noop,
+	NoOp,
+	Debug,
 }
 
 impl From<Token> for Instr {
@@ -24,7 +25,7 @@ impl From<Token> for Instr {
 			Token::CellPrint => Self::Print,
 			Token::LoopStart => Self::LoopStart,
 			Token::LoopEnd => Self::LoopEnd,
-			Token::Comment(_) => Self::Noop,
+			Token::Comment(_) => Self::NoOp,
 		}
 	}
 }
