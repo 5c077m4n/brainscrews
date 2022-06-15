@@ -1,13 +1,12 @@
 use super::instr::Instr;
 use anyhow::{anyhow, bail, Result};
-use log::debug;
 
 const MEMORY_LENGTH_LIMIT: usize = 30_000;
 
 pub struct VM {
-	ip: usize,
-	stack_pointer: usize,
-	stack: Vec<isize>,
+	pub(crate) ip: usize,
+	pub(crate) stack_pointer: usize,
+	pub(crate) stack: Vec<isize>,
 }
 
 impl Default for VM {
@@ -15,7 +14,11 @@ impl Default for VM {
 		Self {
 			ip: 0,
 			stack_pointer: 0,
-			stack: Vec::with_capacity(MEMORY_LENGTH_LIMIT),
+			stack: {
+				let mut vec = Vec::with_capacity(MEMORY_LENGTH_LIMIT);
+				vec.push(0);
+				vec
+			},
 		}
 	}
 }
@@ -70,7 +73,6 @@ impl VM {
 					bail!("Could not get the current value")
 				}
 			}
-			Instr::Debug => debug!("{:?} @ {}", self.stack, self.stack_pointer),
 			Instr::NoOp => {}
 			other => todo!("Handle instr {:?}", other),
 		}

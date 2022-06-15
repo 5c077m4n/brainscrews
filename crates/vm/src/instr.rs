@@ -11,7 +11,6 @@ pub enum Instr {
 	LoopStart,
 	LoopEnd,
 	NoOp,
-	Debug,
 }
 
 impl From<Token> for Instr {
