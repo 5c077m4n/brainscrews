@@ -4,8 +4,8 @@ use lexer::tokens::Token;
 pub enum Instr {
 	MoveRight(usize),
 	MoveLeft(usize),
-	Inc(isize),
-	Dec(isize),
+	Inc(u32),
+	Dec(u32),
 	Insert,
 	Print,
 	LoopStart,

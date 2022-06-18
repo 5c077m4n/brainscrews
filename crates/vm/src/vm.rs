@@ -1,12 +1,15 @@
 use super::instr::Instr;
 use anyhow::{anyhow, bail, Result};
+use std::io::{self, Write};
 
 const MEMORY_LENGTH_LIMIT: usize = 30_000;
 
 pub struct VM {
-	pub(crate) ip: usize,
-	pub(crate) stack_pointer: usize,
-	pub(crate) stack: Vec<isize>,
+	pub(crate) stack: Vec<u32>,
+
+	ip: usize,
+	stack_pointer: usize,
+	writer: Box<dyn Write>,
 }
 
 impl Default for VM {
@@ -19,11 +22,18 @@ impl Default for VM {
 				vec.push(0);
 				vec
 			},
+			writer: Box::new(io::stdout()),
 		}
 	}
 }
 
 impl VM {
+	pub fn new(writer: Box<dyn Write>) -> Self {
+		Self {
+			writer,
+			..Self::default()
+		}
+	}
 	fn handle_instr(&mut self, instr: &Instr) -> Result<()> {
 		match instr {
 			Instr::MoveRight(n) => {
@@ -62,7 +72,10 @@ impl VM {
 			}
 			Instr::Print => {
 				if let Some(value) = self.stack.get(self.stack_pointer) {
-					print!("{}", value);
+					let value =
+						char::from_u32(*value).ok_or_else(|| anyhow!("Could not parse to char"))?;
+					self.writer.write_all(&[value as u8])?;
+					self.writer.flush()?;
 				} else {
 					bail!("Could not get the current value")
 				}
@@ -73,7 +86,7 @@ impl VM {
 		Ok(())
 	}
 
-	pub fn run(&mut self, program: &[Instr]) -> Result<isize> {
+	pub fn run(&mut self, program: &[Instr]) -> Result<u32> {
 		self.ip = 0;
 		self.stack_pointer = 0;
 
@@ -85,5 +98,11 @@ impl VM {
 		self.stack
 			.pop()
 			.ok_or_else(|| anyhow!("The stack is empty"))
+	}
+
+	pub fn dump(&mut self) -> Result<(), io::Error> {
+		self.writer
+			.write_all(format!("{:?}", self.stack).as_bytes())?;
+		self.writer.flush()
 	}
 }
