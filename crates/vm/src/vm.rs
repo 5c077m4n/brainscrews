@@ -42,12 +42,6 @@ impl VM {
 			Instr::MoveLeft(n) => {
 				if let Some(result) = self.stack_pointer.checked_sub(*n) {
 					self.stack_pointer = result;
-
-					if self.stack.len() < self.stack_pointer {
-						for _ in self.stack.len()..=self.stack_pointer {
-							self.stack.push(0);
-						}
-					}
 				} else {
 					bail!("Sorry, the index is too small")
 				}
