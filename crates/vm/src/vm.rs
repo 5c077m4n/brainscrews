@@ -95,9 +95,7 @@ impl VM {
 			self.handle_instr(instr)?;
 		}
 
-		self.stack
-			.pop()
-			.ok_or_else(|| anyhow!("The stack is empty"))
+		Ok(*self.stack.last().unwrap_or(&0))
 	}
 
 	pub fn dump(&mut self) -> Result<(), io::Error> {

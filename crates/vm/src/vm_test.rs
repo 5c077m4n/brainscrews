@@ -8,7 +8,7 @@ pub fn sanity() -> Result<()> {
 	let result = vm.run(&[Instr::Inc(1)])?;
 
 	assert_eq!(result, 1);
-	assert_eq!(vm.stack, &[]);
+	assert_eq!(vm.stack, &[1]);
 	Ok(())
 }
 
@@ -27,6 +27,6 @@ pub fn sanity_2() -> Result<()> {
 	])?;
 
 	assert_eq!(result, 3);
-	assert_eq!(vm.stack, &[3, 0]);
+	assert_eq!(vm.stack, &[3, 0, 3]);
 	Ok(())
 }
