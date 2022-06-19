@@ -6,6 +6,8 @@ use std::{
 	fs::{self, File},
 };
 
+const TEST_OUTPUT_FILE: &str = "brainscrews_test_output_file";
+
 #[test_with_logger]
 pub fn sanity() -> Result<()> {
 	let mut vm = VM::default();
@@ -37,12 +39,11 @@ pub fn sanity_2() -> Result<()> {
 
 #[test_with_logger]
 pub fn sanity_print() -> Result<()> {
-	let tmp_file = temp_dir().join("brainscrews-test");
+	let tmp_out_file = temp_dir().join(TEST_OUTPUT_FILE);
+	let f_out = File::create(&tmp_out_file)?;
+	let f_out = Box::new(f_out);
 
-	let f = File::create(&tmp_file)?;
-	let f = Box::new(f);
-
-	let mut vm = VM::new(f);
+	let mut vm = VM::new("", f_out);
 	let result = vm.run(&[
 		Instr::Inc(1),
 		Instr::Inc(1),
@@ -56,7 +57,7 @@ pub fn sanity_print() -> Result<()> {
 	assert_eq!(result, b'a'.into());
 	assert_eq!(vm.stack, &[3, 0, b'a'.into()]);
 
-	let tmp_file_content = fs::read_to_string(&tmp_file)?;
+	let tmp_file_content = fs::read_to_string(&tmp_out_file)?;
 	assert_eq!(tmp_file_content.as_bytes(), b"a");
 
 	Ok(())

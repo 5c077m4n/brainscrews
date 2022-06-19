@@ -1,6 +1,9 @@
 use super::instr::Instr;
 use anyhow::{anyhow, bail, Result};
-use std::io::{self, Write};
+use std::{
+	io::{self, Write},
+	str::Chars,
+};
 
 const MEMORY_LENGTH_LIMIT: usize = 30_000;
 
@@ -12,6 +15,7 @@ pub struct VM {
 	/// Stack pointer
 	sp: usize,
 	writer: Box<dyn Write>,
+	input: Chars<'static>,
 }
 
 impl Default for VM {
@@ -25,14 +29,16 @@ impl Default for VM {
 				vec
 			},
 			writer: Box::new(io::stdout()),
+			input: "".chars(),
 		}
 	}
 }
 
 impl VM {
-	pub fn new(writer: Box<dyn Write>) -> Self {
+	pub fn new(input: &'static str, writer: Box<dyn Write>) -> Self {
 		Self {
 			writer,
+			input: input.chars(),
 			..Self::default()
 		}
 	}
@@ -74,6 +80,17 @@ impl VM {
 					}
 				} else {
 					bail!("Index not found")
+				}
+			}
+			Instr::Insert => {
+				if let Some(value) = self.stack.get_mut(self.sp) {
+					if let Some(next_char) = self.input.next() {
+						*value = next_char.into();
+					} else {
+						bail!("Could not get the next input char")
+					}
+				} else {
+					bail!("Could not get the current value")
 				}
 			}
 			Instr::Print => {
