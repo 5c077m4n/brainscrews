@@ -9,9 +9,9 @@ pub enum Token {
 	/// `-`
 	CellDec,
 	/// `,`
-	CellInsert,
+	Insert,
 	/// `.`
-	CellPrint,
+	Print,
 	/// `[`
 	LoopStart,
 	/// `]`

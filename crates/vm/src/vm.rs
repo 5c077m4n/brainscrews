@@ -67,7 +67,11 @@ impl VM {
 			}
 			Instr::Dec(n) => {
 				if let Some(value) = self.stack.get_mut(self.sp) {
-					*value -= n;
+					if let Some(n) = value.checked_sub(*n) {
+						*value = n;
+					} else {
+						bail!("Stack values cannot be negative")
+					}
 				} else {
 					bail!("Index not found")
 				}
