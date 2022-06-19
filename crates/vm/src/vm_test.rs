@@ -62,3 +62,18 @@ pub fn sanity_print() -> Result<()> {
 
 	Ok(())
 }
+
+#[test_with_logger]
+pub fn sanity_input() -> Result<()> {
+	let tmp_out_file = temp_dir().join(TEST_OUTPUT_FILE);
+	let f_out = File::create(&tmp_out_file)?;
+	let f_out = Box::new(f_out);
+
+	let mut vm = VM::new("a", f_out);
+	let _ = vm.run(&[Instr::Insert, Instr::Print])?;
+
+	let tmp_file_content = fs::read_to_string(&tmp_out_file)?;
+	assert_eq!(tmp_file_content, "a");
+
+	Ok(())
+}
