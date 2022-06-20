@@ -16,7 +16,7 @@ pub struct VM<'v> {
 	sp: usize,
 	loop_indexes: Vec<usize>,
 
-	input: Chars<'v>,
+	input: Option<Chars<'v>>,
 	writer: Box<dyn Write>,
 }
 
@@ -31,16 +31,16 @@ impl Default for VM<'_> {
 				vec.push(0);
 				vec
 			},
-			input: "".chars(),
+			input: None,
 			writer: Box::new(io::stdout()),
 		}
 	}
 }
 
 impl VM<'_> {
-	pub fn new(input: &'static str, writer: Box<dyn Write>) -> Self {
+	pub fn new(input: Option<&'static str>, writer: Box<dyn Write>) -> Self {
 		Self {
-			input: input.chars(),
+			input: input.map(|i| i.chars()),
 			writer,
 			..Self::default()
 		}
@@ -85,16 +85,17 @@ impl VM<'_> {
 				}
 			}
 			Instr::LoopStart => {
-				self.loop_indexes.push(self.sp);
+				self.loop_indexes.push(self.ip);
 			}
 			Instr::LoopEnd => {
 				if let Some(latest_loop_sp) = self.loop_indexes.last() {
-					if let Some(latest_loop_index) = self.stack.get(*latest_loop_sp) {
+					if let Some(latest_loop_index) = self.stack.get_mut(*latest_loop_sp) {
 						if *latest_loop_index != 0 {
-							self.sp = *latest_loop_index as usize;
+							self.ip = *latest_loop_sp as usize;
+							*latest_loop_index -= 1;
 						} else {
 							let _ = self.loop_indexes.pop();
-							self.sp += 1;
+							self.ip += 1;
 						}
 					} else {
 						bail!("Could not get the loop's index")
@@ -104,8 +105,13 @@ impl VM<'_> {
 				}
 			}
 			Instr::Insert => {
+				let input_iter = self
+					.input
+					.as_mut()
+					.expect("If you want to insert (`,`) then you need to provide an input");
+
 				if let Some(value) = self.stack.get_mut(self.sp) {
-					if let Some(next_char) = self.input.next() {
+					if let Some(next_char) = input_iter.next() {
 						*value = next_char.into();
 					} else {
 						bail!("Could not get the next input char")

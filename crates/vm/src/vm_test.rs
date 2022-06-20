@@ -43,7 +43,7 @@ pub fn sanity_print() -> Result<()> {
 	let f_out = File::create(&tmp_out_file)?;
 	let f_out = Box::new(f_out);
 
-	let mut vm = VM::new("", f_out);
+	let mut vm = VM::new(None, f_out);
 	let result = vm.run(&[
 		Instr::Inc(1),
 		Instr::Inc(1),
@@ -69,7 +69,7 @@ pub fn sanity_input() -> Result<()> {
 	let f_out = File::create(&tmp_out_file)?;
 	let f_out = Box::new(f_out);
 
-	let mut vm = VM::new("a", f_out);
+	let mut vm = VM::new(Some("a"), f_out);
 	let _ = vm.run(&[Instr::Insert, Instr::Print])?;
 
 	let tmp_file_content = fs::read_to_string(&tmp_out_file)?;
