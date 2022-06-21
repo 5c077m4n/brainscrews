@@ -10,8 +10,10 @@ const TEST_OUTPUT_FILE: &str = "brainscrews_test_output_file";
 
 #[test_with_logger]
 pub fn sanity() -> Result<()> {
+	use Instr::*;
+
 	let mut vm = VM::default();
-	let result = vm.run(&[Instr::Inc(1)])?;
+	let result = vm.run(&[Inc(1)])?;
 
 	assert_eq!(result, 1);
 	assert_eq!(vm.stack, &[1]);
@@ -20,16 +22,18 @@ pub fn sanity() -> Result<()> {
 
 #[test_with_logger]
 pub fn sanity_2() -> Result<()> {
+	use Instr::*;
+
 	let mut vm = VM::default();
 	let result = vm.run(&[
-		Instr::Inc(1),
-		Instr::Inc(1),
-		Instr::Inc(1),
-		Instr::MoveRight(1),
-		Instr::MoveRight(1),
-		Instr::Inc(1),
-		Instr::Inc(1),
-		Instr::Inc(1),
+		Inc(1),
+		Inc(1),
+		Inc(1),
+		MoveRight(1),
+		MoveRight(1),
+		Inc(1),
+		Inc(1),
+		Inc(1),
 	])?;
 
 	assert_eq!(result, 3);
@@ -39,19 +43,21 @@ pub fn sanity_2() -> Result<()> {
 
 #[test_with_logger]
 pub fn sanity_print() -> Result<()> {
+	use Instr::*;
+
 	let tmp_out_file = temp_dir().join(TEST_OUTPUT_FILE);
 	let f_out = File::create(&tmp_out_file)?;
 	let f_out = Box::new(f_out);
 
 	let mut vm = VM::new(None, f_out);
 	let result = vm.run(&[
-		Instr::Inc(1),
-		Instr::Inc(1),
-		Instr::Inc(1),
-		Instr::MoveRight(1),
-		Instr::MoveRight(1),
-		Instr::Inc(b'a'.into()),
-		Instr::Print,
+		Inc(1),
+		Inc(1),
+		Inc(1),
+		MoveRight(1),
+		MoveRight(1),
+		Inc(b'a'.into()),
+		Print,
 	])?;
 
 	assert_eq!(result, b'a'.into());
@@ -65,12 +71,14 @@ pub fn sanity_print() -> Result<()> {
 
 #[test_with_logger]
 pub fn sanity_input() -> Result<()> {
+	use Instr::*;
+
 	let tmp_out_file = temp_dir().join(TEST_OUTPUT_FILE);
 	let f_out = File::create(&tmp_out_file)?;
 	let f_out = Box::new(f_out);
 
 	let mut vm = VM::new(Some("a"), f_out);
-	let _ = vm.run(&[Instr::Insert, Instr::Print])?;
+	let _ = vm.run(&[Insert, Print])?;
 
 	let tmp_file_content = fs::read_to_string(&tmp_out_file)?;
 	assert_eq!(tmp_file_content, "a");
@@ -79,7 +87,6 @@ pub fn sanity_input() -> Result<()> {
 }
 
 #[test_with_logger]
-#[ignore]
 pub fn loop_zero_param() -> Result<()> {
 	use Instr::*;
 
@@ -87,6 +94,7 @@ pub fn loop_zero_param() -> Result<()> {
 	let result = vm.run(&[Inc(10), LoopStart, Dec(1), LoopEnd])?;
 
 	assert_eq!(result, 0);
+	assert_eq!(vm.stack, &[0]);
 
 	Ok(())
 }

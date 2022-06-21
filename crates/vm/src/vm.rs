@@ -1,5 +1,6 @@
 use super::instr::Instr;
 use anyhow::{anyhow, bail, Result};
+use log::debug;
 use std::{
 	io::{self, Write},
 	str::Chars,
@@ -88,14 +89,14 @@ impl VM<'_> {
 				self.loop_indexes.push(self.ip);
 			}
 			Instr::LoopEnd => {
-				if let Some(latest_loop_sp) = self.loop_indexes.last() {
-					if let Some(latest_loop_index) = self.stack.get_mut(*latest_loop_sp) {
-						if *latest_loop_index != 0 {
-							self.ip = *latest_loop_sp as usize;
-							*latest_loop_index -= 1;
-						} else {
+				if let Some(latest_loop_ip) = self.loop_indexes.last() {
+					debug!("{:?}, {}", self.stack, latest_loop_ip);
+					if let Some(latest_loop_counter) = self.stack.get_mut(*latest_loop_ip - 1) {
+						if *latest_loop_counter == 0 {
 							let _ = self.loop_indexes.pop();
-							self.ip += 1;
+						} else {
+							self.ip = (*latest_loop_ip + 1) as usize;
+							*latest_loop_counter -= 1;
 						}
 					} else {
 						bail!("Could not get the loop's index")
@@ -105,10 +106,9 @@ impl VM<'_> {
 				}
 			}
 			Instr::Insert => {
-				let input_iter = self
-					.input
-					.as_mut()
-					.expect("If you want to insert (`,`) then you need to provide an input");
+				let input_iter = self.input.as_mut().ok_or_else(|| {
+					anyhow!("If you want to insert (`,`) then you need to provide an input")
+				})?;
 
 				if let Some(value) = self.stack.get_mut(self.sp) {
 					if let Some(next_char) = input_iter.next() {
@@ -141,8 +141,8 @@ impl VM<'_> {
 		self.loop_indexes = Vec::new();
 
 		while let Some(instr) = program.get(self.ip) {
-			self.ip += 1;
 			self.handle_instr(instr)?;
+			self.ip += 1;
 		}
 
 		Ok(*self.stack.last().unwrap_or(&0))
