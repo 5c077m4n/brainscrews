@@ -47,7 +47,7 @@ pub fn sanity_print() -> Result<()> {
 	let f_out = File::create(&tmp_out_file)?;
 	let f_out = Box::new(f_out);
 
-	let mut vm = VM::new(None, f_out);
+	let mut vm = VM::new(Box::new("".as_bytes()), f_out);
 	vm.run(&[
 		Inc(1),
 		Inc(1),
@@ -74,7 +74,7 @@ pub fn sanity_input() -> Result<()> {
 	let f_out = File::create(&tmp_out_file)?;
 	let f_out = Box::new(f_out);
 
-	let mut vm = VM::new(Some("a"), f_out);
+	let mut vm = VM::new(Box::new("a".as_bytes()), f_out);
 	vm.run(&[Insert, Print])?;
 
 	let tmp_file_content = fs::read_to_string(&tmp_out_file)?;
@@ -115,7 +115,7 @@ pub fn loop_cat() -> Result<()> {
 	let f_out = File::create(&tmp_out_file)?;
 	let f_out = Box::new(f_out);
 
-	let mut vm = VM::new(Some("abcdefg"), f_out);
+	let mut vm = VM::new(Box::new("a\nb\nc\nd\ne\nf\ng\n".as_bytes()), f_out);
 	vm.run(&[Insert, LoopStart, Print, Insert, LoopEnd])?;
 
 	let tmp_file_content = fs::read_to_string(&tmp_out_file)?;

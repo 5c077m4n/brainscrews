@@ -1,14 +1,11 @@
 use super::instr::Instr;
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Result};
 use log::debug;
-use std::{
-	io::{self, Write},
-	str::Chars,
-};
+use std::io::{self, Read, Write};
 
 const MEMORY_LENGTH_LIMIT: usize = 30_000;
 
-pub struct VM<'v> {
+pub struct VM {
 	pub(crate) stack: Vec<u8>,
 
 	/// Instruction pointer
@@ -17,11 +14,11 @@ pub struct VM<'v> {
 	sp: usize,
 	loop_indexes: Vec<usize>,
 
-	input: Option<Chars<'v>>,
+	reader: Box<dyn Read>,
 	writer: Box<dyn Write>,
 }
 
-impl Default for VM<'_> {
+impl Default for VM {
 	fn default() -> Self {
 		Self {
 			ip: 0,
@@ -32,16 +29,16 @@ impl Default for VM<'_> {
 				vec.push(0);
 				vec
 			},
-			input: None,
+			reader: Box::new(io::stdin()),
 			writer: Box::new(io::stdout()),
 		}
 	}
 }
 
-impl VM<'_> {
-	pub fn new(input: Option<&'static str>, writer: Box<dyn Write>) -> Self {
+impl VM {
+	pub fn new(reader: Box<dyn Read>, writer: Box<dyn Write>) -> Self {
 		Self {
-			input: input.map(|i| i.chars()),
+			reader,
 			writer,
 			..Self::default()
 		}
@@ -102,12 +99,11 @@ impl VM<'_> {
 				}
 			}
 			Instr::Insert => {
-				let input_iter = self.input.as_mut().ok_or_else(|| {
-					anyhow!("If you want to insert (`,`) then you need to provide an input")
-				})?;
+				let mut buffer = Vec::<u8>::new();
+				self.reader.read_to_end(&mut buffer)?;
 
 				if let Some(value) = self.stack.get_mut(self.sp) {
-					if let Some(next_char) = input_iter.next() {
+					if let Some(&next_char) = buffer.get(0) {
 						*value = next_char as u8;
 					}
 				} else {
