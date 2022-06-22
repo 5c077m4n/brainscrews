@@ -13,9 +13,8 @@ pub fn sanity() -> Result<()> {
 	use Instr::*;
 
 	let mut vm = VM::default();
-	let result = vm.run(&[Inc(1)])?;
+	vm.run(&[Inc(1)])?;
 
-	assert_eq!(result, 1);
 	assert_eq!(vm.stack, &[1]);
 	Ok(())
 }
@@ -25,7 +24,7 @@ pub fn sanity_2() -> Result<()> {
 	use Instr::*;
 
 	let mut vm = VM::default();
-	let result = vm.run(&[
+	vm.run(&[
 		Inc(1),
 		Inc(1),
 		Inc(1),
@@ -36,7 +35,6 @@ pub fn sanity_2() -> Result<()> {
 		Inc(1),
 	])?;
 
-	assert_eq!(result, 3);
 	assert_eq!(vm.stack, &[3, 0, 3]);
 	Ok(())
 }
@@ -50,18 +48,17 @@ pub fn sanity_print() -> Result<()> {
 	let f_out = Box::new(f_out);
 
 	let mut vm = VM::new(None, f_out);
-	let result = vm.run(&[
+	vm.run(&[
 		Inc(1),
 		Inc(1),
 		Inc(1),
 		MoveRight(1),
 		MoveRight(1),
-		Inc(b'a'.into()),
+		Inc(b'a'),
 		Print,
 	])?;
 
-	assert_eq!(result, b'a'.into());
-	assert_eq!(vm.stack, &[3, 0, b'a'.into()]);
+	assert_eq!(vm.stack, &[3, 0, b'a']);
 
 	let tmp_file_content = fs::read_to_string(&tmp_out_file)?;
 	assert_eq!(tmp_file_content.as_bytes(), b"a");
@@ -78,7 +75,7 @@ pub fn sanity_input() -> Result<()> {
 	let f_out = Box::new(f_out);
 
 	let mut vm = VM::new(Some("a"), f_out);
-	let _ = vm.run(&[Insert, Print])?;
+	vm.run(&[Insert, Print])?;
 
 	let tmp_file_content = fs::read_to_string(&tmp_out_file)?;
 	assert_eq!(tmp_file_content, "a");
@@ -87,14 +84,24 @@ pub fn sanity_input() -> Result<()> {
 }
 
 #[test_with_logger]
-pub fn loop_zero_param() -> Result<()> {
+#[ignore]
+pub fn move_value() -> Result<()> {
 	use Instr::*;
 
 	let mut vm = VM::default();
-	let result = vm.run(&[Inc(10), LoopStart, Dec(1), LoopEnd])?;
+	vm.run(&[
+		Inc(5),
+		MoveRight(2),
+		MoveLeft(2),
+		LoopStart,
+		Dec(1),
+		MoveRight(2),
+		Inc(1),
+		MoveLeft(2),
+		LoopEnd,
+	])?;
 
-	assert_eq!(result, 0);
-	assert_eq!(vm.stack, &[0]);
+	assert_eq!(vm.stack, &[0, 0, 5]);
 
 	Ok(())
 }
@@ -109,7 +116,7 @@ pub fn loop_cat() -> Result<()> {
 	let f_out = Box::new(f_out);
 
 	let mut vm = VM::new(Some("abcdefg"), f_out);
-	let _ = vm.run(&[Insert, LoopStart, Print, Insert, LoopEnd])?;
+	vm.run(&[Insert, LoopStart, Print, Insert, LoopEnd])?;
 
 	let tmp_file_content = fs::read_to_string(&tmp_out_file)?;
 	assert_eq!(tmp_file_content, "abcdefg");

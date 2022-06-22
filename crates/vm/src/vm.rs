@@ -9,7 +9,7 @@ use std::{
 const MEMORY_LENGTH_LIMIT: usize = 30_000;
 
 pub struct VM<'v> {
-	pub(crate) stack: Vec<u32>,
+	pub(crate) stack: Vec<u8>,
 
 	/// Instruction pointer
 	ip: usize,
@@ -47,6 +47,7 @@ impl VM<'_> {
 		}
 	}
 	fn handle_instr(&mut self, instr: &Instr) -> Result<()> {
+		debug!("Instruction: {:?}, current stack: {:?}", &instr, self.stack);
 		match instr {
 			Instr::MoveRight(n) => {
 				if let Some(result) = self.sp.checked_add(*n) {
@@ -69,18 +70,14 @@ impl VM<'_> {
 			}
 			Instr::Inc(n) => {
 				if let Some(value) = self.stack.get_mut(self.sp) {
-					*value += n;
+					*value = value.wrapping_add(*n);
 				} else {
 					bail!("Index not found")
 				}
 			}
 			Instr::Dec(n) => {
 				if let Some(value) = self.stack.get_mut(self.sp) {
-					if let Some(n) = value.checked_sub(*n) {
-						*value = n;
-					} else {
-						bail!("Stack values cannot be negative")
-					}
+					*value = value.wrapping_sub(*n);
 				} else {
 					bail!("Index not found")
 				}
@@ -90,12 +87,11 @@ impl VM<'_> {
 			}
 			Instr::LoopEnd => {
 				if let Some(latest_loop_ip) = self.loop_indexes.last() {
-					debug!("{:?}, {}", self.stack, latest_loop_ip);
 					if let Some(latest_loop_counter) = self.stack.get_mut(*latest_loop_ip - 1) {
 						if *latest_loop_counter == 0 {
 							let _ = self.loop_indexes.pop();
 						} else {
-							self.ip = (*latest_loop_ip + 1) as usize;
+							self.ip = *latest_loop_ip;
 							*latest_loop_counter -= 1;
 						}
 					} else {
@@ -112,19 +108,16 @@ impl VM<'_> {
 
 				if let Some(value) = self.stack.get_mut(self.sp) {
 					if let Some(next_char) = input_iter.next() {
-						*value = next_char.into();
-					} else {
-						bail!("Could not get the next input char")
+						*value = next_char as u8;
 					}
 				} else {
 					bail!("Could not get the current value")
 				}
 			}
 			Instr::Print => {
-				if let Some(value) = self.stack.get(self.sp) {
-					let value =
-						char::from_u32(*value).ok_or_else(|| anyhow!("Could not parse to char"))?;
-					self.writer.write_all(&[value as u8])?;
+				if let Some(&value) = self.stack.get(self.sp) {
+					let value = &[value];
+					self.writer.write_all(value)?;
 					self.writer.flush()?;
 				} else {
 					bail!("Could not get the current value")
@@ -135,7 +128,7 @@ impl VM<'_> {
 		Ok(())
 	}
 
-	pub fn run(&mut self, program: &[Instr]) -> Result<u32> {
+	pub fn run(&mut self, program: &[Instr]) -> Result<()> {
 		self.ip = 0;
 		self.sp = 0;
 		self.loop_indexes = Vec::new();
@@ -145,6 +138,6 @@ impl VM<'_> {
 			self.ip += 1;
 		}
 
-		Ok(*self.stack.last().unwrap_or(&0))
+		Ok(())
 	}
 }
