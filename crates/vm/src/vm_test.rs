@@ -13,7 +13,7 @@ pub fn sanity() -> Result<()> {
 	use Instr::*;
 
 	let mut vm = VM::default();
-	vm.run(&[Inc(1)])?;
+	vm.run(&[Inc])?;
 
 	assert_eq!(vm.stack, &[1]);
 	Ok(())
@@ -24,16 +24,7 @@ pub fn sanity_2() -> Result<()> {
 	use Instr::*;
 
 	let mut vm = VM::default();
-	vm.run(&[
-		Inc(1),
-		Inc(1),
-		Inc(1),
-		MoveRight(1),
-		MoveRight(1),
-		Inc(1),
-		Inc(1),
-		Inc(1),
-	])?;
+	vm.run(&[Inc, Inc, Inc, MoveRight, MoveRight, Inc, Inc, Inc])?;
 
 	assert_eq!(vm.stack, &[3, 0, 3]);
 	Ok(())
@@ -49,19 +40,18 @@ pub fn sanity_print() -> Result<()> {
 
 	let mut vm = VM::new(Box::new("".as_bytes()), f_out);
 	vm.run(&[
-		Inc(1),
-		Inc(1),
-		Inc(1),
-		MoveRight(1),
-		MoveRight(1),
-		Inc(b'a'),
-		Print,
+		Inc, Inc, Inc, MoveRight, MoveRight, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc,
+		Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc,
+		Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc,
+		Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc,
+		Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc,
+		Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Inc, Print,
 	])?;
 
-	assert_eq!(vm.stack, &[3, 0, b'a']);
+	assert_eq!(vm.stack, &[3, 0, 97]);
 
 	let tmp_file_content = fs::read_to_string(&tmp_out_file)?;
-	assert_eq!(tmp_file_content.as_bytes(), b"a");
+	assert_eq!(tmp_file_content, "a");
 
 	Ok(())
 }
@@ -84,21 +74,14 @@ pub fn sanity_input() -> Result<()> {
 }
 
 #[test_with_logger]
-#[ignore]
 pub fn move_value() -> Result<()> {
 	use Instr::*;
 
 	let mut vm = VM::default();
+
+	vm.stack = vec![5, 0, 0];
 	vm.run(&[
-		Inc(5),
-		MoveRight(2),
-		MoveLeft(2),
-		LoopStart,
-		Dec(1),
-		MoveRight(2),
-		Inc(1),
-		MoveLeft(2),
-		LoopEnd,
+		LoopStart, Dec, MoveRight, MoveRight, Inc, MoveLeft, MoveLeft, LoopEnd,
 	])?;
 
 	assert_eq!(vm.stack, &[0, 0, 5]);

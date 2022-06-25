@@ -12,7 +12,7 @@ pub struct VM {
 	ip: usize,
 	/// Stack pointer
 	sp: usize,
-	loop_indexes: Vec<usize>,
+	loop_indexes: Vec<(usize, u8)>,
 
 	reader: Box<dyn Read>,
 	writer: Box<dyn Write>,
@@ -44,10 +44,9 @@ impl VM {
 		}
 	}
 	fn handle_instr(&mut self, instr: &Instr) -> Result<()> {
-		debug!("Instruction: {:?}, current stack: {:?}", &instr, self.stack);
 		match instr {
-			Instr::MoveRight(n) => {
-				if let Some(result) = self.sp.checked_add(*n) {
+			Instr::MoveRight => {
+				if let Some(result) = self.sp.checked_add(1) {
 					self.sp = result;
 					if self.stack.len() < self.sp {
 						for _ in self.stack.len()..=self.sp {
@@ -58,49 +57,47 @@ impl VM {
 					bail!("Sorry, the index is too large")
 				}
 			}
-			Instr::MoveLeft(n) => {
-				if let Some(result) = self.sp.checked_sub(*n) {
+			Instr::MoveLeft => {
+				if let Some(result) = self.sp.checked_sub(1) {
 					self.sp = result;
 				} else {
 					bail!("Sorry, the index is too small")
 				}
 			}
-			Instr::Inc(n) => {
+			Instr::Inc => {
 				if let Some(value) = self.stack.get_mut(self.sp) {
-					*value = value.wrapping_add(*n);
+					*value = value.saturating_add(1);
 				} else {
 					bail!("Index not found")
 				}
 			}
-			Instr::Dec(n) => {
+			Instr::Dec => {
 				if let Some(value) = self.stack.get_mut(self.sp) {
-					*value = value.wrapping_sub(*n);
+					*value = value.saturating_sub(1);
 				} else {
 					bail!("Index not found")
 				}
 			}
 			Instr::LoopStart => {
-				self.loop_indexes.push(self.ip);
+				let loop_counter = self.stack.get(self.sp).unwrap();
+				self.loop_indexes.push((self.ip, *loop_counter - 1));
 			}
 			Instr::LoopEnd => {
-				if let Some(latest_loop_ip) = self.loop_indexes.last() {
-					if let Some(latest_loop_counter) = self.stack.get_mut(*latest_loop_ip - 1) {
-						if *latest_loop_counter == 0 {
-							let _ = self.loop_indexes.pop();
-						} else {
-							self.ip = *latest_loop_ip;
-							*latest_loop_counter -= 1;
-						}
-					} else {
-						bail!("Could not get the loop's index")
-					}
+				let (loop_start_ip, loop_counter) = self
+					.loop_indexes
+					.last_mut()
+					.expect("You need to start the loop before ending it...");
+				if *loop_counter == 0 {
+					let _ = self.loop_indexes.pop();
 				} else {
-					bail!("Could not get the last loop stack pointer")
+					self.ip = *loop_start_ip;
+					*loop_counter -= 1;
 				}
 			}
 			Instr::Insert => {
 				let mut buffer = Vec::<u8>::new();
 				self.reader.read_to_end(&mut buffer)?;
+				debug!("{:?}", &buffer);
 
 				if let Some(value) = self.stack.get_mut(self.sp) {
 					if let Some(&next_char) = buffer.get(0) {
@@ -131,6 +128,10 @@ impl VM {
 
 		while let Some(instr) = program.get(self.ip) {
 			self.handle_instr(instr)?;
+			debug!(
+				"Instruction: {:?}, ip: {:?}, stack: {:?}, loop indexes: {:?}",
+				&instr, &self.ip, &self.stack, &self.loop_indexes,
+			);
 			self.ip += 1;
 		}
 

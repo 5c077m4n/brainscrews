@@ -2,10 +2,10 @@ use lexer::tokens::Token;
 
 #[derive(Debug)]
 pub enum Instr {
-	MoveRight(usize),
-	MoveLeft(usize),
-	Inc(u8),
-	Dec(u8),
+	MoveRight,
+	MoveLeft,
+	Inc,
+	Dec,
 	Insert,
 	Print,
 	LoopStart,
@@ -16,10 +16,10 @@ pub enum Instr {
 impl From<Token> for Instr {
 	fn from(token: Token) -> Self {
 		match token {
-			Token::PointerRight => Self::MoveRight(1),
-			Token::PointerLeft => Self::MoveLeft(1),
-			Token::CellInc => Self::Inc(1),
-			Token::CellDec => Self::Dec(1),
+			Token::PointerRight => Self::MoveRight,
+			Token::PointerLeft => Self::MoveLeft,
+			Token::CellInc => Self::Inc,
+			Token::CellDec => Self::Dec,
 			Token::Insert => Self::Insert,
 			Token::Print => Self::Print,
 			Token::LoopStart => Self::LoopStart,
