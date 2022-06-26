@@ -1,5 +1,5 @@
 use super::instr::Instr;
-use anyhow::{bail, Result};
+use anyhow::{anyhow, bail, Result};
 use log::debug;
 use std::io::{self, Read, Write};
 
@@ -95,9 +95,11 @@ impl VM {
 				}
 			}
 			Instr::Insert => {
-				let mut buffer = Vec::<u8>::new();
-				self.reader.read_to_end(&mut buffer)?;
-				debug!("{:?}", &buffer);
+				let mut buffer = vec![0u8];
+				self.reader
+					.read_exact(&mut buffer)
+					.map_err(|error| anyhow!("Could not read the given input ({:?})", &error))?;
+				debug!("Input: {:?}/`{}`", &buffer, std::str::from_utf8(&buffer)?);
 
 				if let Some(value) = self.stack.get_mut(self.sp) {
 					if let Some(&next_char) = buffer.get(0) {

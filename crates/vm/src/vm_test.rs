@@ -98,7 +98,7 @@ pub fn loop_cat() -> Result<()> {
 	let f_out = File::create(&tmp_out_file)?;
 	let f_out = Box::new(f_out);
 
-	let mut vm = VM::new(Box::new("a\nb\nc\nd\ne\nf\ng\n".as_bytes()), f_out);
+	let mut vm = VM::new(Box::new("abcdefg".as_bytes()), f_out);
 	vm.run(&[Insert, LoopStart, Print, Insert, LoopEnd])?;
 
 	let tmp_file_content = fs::read_to_string(&tmp_out_file)?;
