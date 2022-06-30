@@ -12,7 +12,7 @@ pub struct VM {
 	ip: usize,
 	/// Stack pointer
 	sp: usize,
-	loop_indexes: Vec<(usize, u8)>,
+	loop_indexes: Vec<(usize, usize)>,
 
 	reader: Box<dyn Read>,
 	writer: Box<dyn Write>,
@@ -79,19 +79,19 @@ impl VM {
 				}
 			}
 			Instr::LoopStart => {
-				let loop_counter = self.stack.get(self.sp).unwrap();
-				self.loop_indexes.push((self.ip, *loop_counter - 1));
+				self.stack[self.sp] -= 1;
+				self.loop_indexes.push((self.ip, self.sp));
 			}
 			Instr::LoopEnd => {
-				let (loop_start_ip, loop_counter) = self
+				let (loop_start_ip, loop_start_sp) = self
 					.loop_indexes
-					.last_mut()
+					.last()
 					.expect("You need to start the loop before ending it...");
-				if *loop_counter == 0 {
+				if self.stack[*loop_start_sp] == 0 {
 					let _ = self.loop_indexes.pop();
 				} else {
 					self.ip = *loop_start_ip;
-					*loop_counter -= 1;
+					self.stack[*loop_start_sp] -= 1;
 				}
 			}
 			Instr::Insert => {

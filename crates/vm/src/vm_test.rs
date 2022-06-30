@@ -84,7 +84,7 @@ pub fn move_value() -> Result<()> {
 		LoopStart, Dec, MoveRight, MoveRight, Inc, MoveLeft, MoveLeft, LoopEnd,
 	])?;
 
-	assert_eq!(vm.stack, &[0, 0, 5]);
+	assert_eq!(vm.stack, &[0, 0, 3]);
 
 	Ok(())
 }
