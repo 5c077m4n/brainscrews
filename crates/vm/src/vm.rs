@@ -95,16 +95,14 @@ impl VM {
 				}
 			}
 			Instr::Insert => {
-				let mut buffer = vec![0u8];
+				let mut buffer: [u8; 1] = [0];
 				self.reader
 					.read_exact(&mut buffer)
 					.map_err(|error| anyhow!("Could not read the given input ({:?})", &error))?;
 				debug!("Input: {:?}/`{}`", &buffer, std::str::from_utf8(&buffer)?);
 
 				if let Some(value) = self.stack.get_mut(self.sp) {
-					if let Some(&next_char) = buffer.get(0) {
-						*value = next_char as u8;
-					}
+					*value = buffer[0];
 				} else {
 					bail!("Could not get the current value")
 				}
